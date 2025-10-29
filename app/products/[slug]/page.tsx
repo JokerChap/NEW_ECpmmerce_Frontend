@@ -6,9 +6,11 @@ import { useCart } from "@/lib/cart-store"
 import Image from "next/image"
 import { Loader, Plus, Minus, ShoppingCart } from "lucide-react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import styles from "./page.module.css"
 
-export default function ProductPage({ params }: { params: { slug: string } }) {
+export default function ProductPage() {
+  const { slug } = useParams() as { slug: string } // ✅ use useParams() instead of params
   const [product, setProduct] = useState<any>(null)
   const [selectedVariant, setSelectedVariant] = useState<any>(null)
   const [quantity, setQuantity] = useState(1)
@@ -22,8 +24,10 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       try {
         setLoading(true)
         const productsRes = await getProducts()
-        const productsList = Array.isArray(productsRes.data) ? productsRes.data : productsRes.data?.items || []
-        const found = productsList.find((p: any) => p.slug === params.slug)
+        const productsList = Array.isArray(productsRes.data)
+          ? productsRes.data
+          : productsRes.data?.items || []
+        const found = productsList.find((p: any) => p.slug === slug)
         if (found) {
           setProduct(found)
           if (found.variants?.length > 0) {
@@ -40,8 +44,8 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
       }
     }
 
-    fetchProduct()
-  }, [params.slug])
+    if (slug) fetchProduct()
+  }, [slug])
 
   const handleAddToCart = () => {
     if (!selectedVariant) return
@@ -98,6 +102,7 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
             alt={product.title}
             width={500}
             height={500}
+            className={styles.image}
           />
         </div>
 
@@ -109,8 +114,12 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
           {selectedVariant && (
             <>
               <div className={styles.priceSection}>
-                <p className={styles.price}>PKR {Number.parseFloat(selectedVariant.price).toLocaleString()}</p>
-                <p className={styles.stock}>Stock: {selectedVariant.stock} available</p>
+                <p className={styles.price}>
+                  PKR {Number.parseFloat(selectedVariant.price).toLocaleString()}
+                </p>
+                <p className={styles.stock}>
+                  Stock: {selectedVariant.stock} available
+                </p>
               </div>
 
               {/* Variant Selection */}
@@ -121,12 +130,18 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
                     <button
                       key={variant.id}
                       onClick={() => setSelectedVariant(variant)}
-                      className={`${styles.variantButton} ${selectedVariant.id === variant.id ? styles.variantButtonActive : ""}`}
+                      className={`${styles.variantButton} ${
+                        selectedVariant.id === variant.id
+                          ? styles.variantButtonActive
+                          : ""
+                      }`}
                     >
                       <div className={styles.variantName}>
                         {variant.color} - Size {variant.size}
                       </div>
-                      <div className={styles.variantPrice}>PKR {Number.parseFloat(variant.price).toLocaleString()}</div>
+                      <div className={styles.variantPrice}>
+                        PKR {Number.parseFloat(variant.price).toLocaleString()}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -136,12 +151,17 @@ export default function ProductPage({ params }: { params: { slug: string } }) {
               <div className={styles.quantitySection}>
                 <h3 className={styles.quantityTitle}>Quantity</h3>
                 <div className={styles.quantityControls}>
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className={styles.quantityButton}>
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className={styles.quantityButton}
+                  >
                     <Minus />
                   </button>
                   <span className={styles.quantity}>{quantity}</span>
                   <button
-                    onClick={() => setQuantity(Math.min(selectedVariant.stock, quantity + 1))}
+                    onClick={() =>
+                      setQuantity(Math.min(selectedVariant.stock, quantity + 1))
+                    }
                     className={styles.quantityButton}
                   >
                     <Plus />
